@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  parent-service:
+    image: ${CI_REGISTRY_IMAGE}:${IMAGE_TAG:-latest}
+    container_name: parent-service
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      SERVICE_NAME: ${SERVICE_NAME:-parent-service}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+      INTERNAL_SERVICE_NAME: ${INTERNAL_SERVICE_NAME:-parent-service}
+      INTERNAL_ALLOWED_SERVICES: ${INTERNAL_ALLOWED_SERVICES}
+      ATTENDANCE_SERVICE_URL: ${ATTENDANCE_SERVICE_URL:-http://attendance-service:8000}
+      ASSESSMENT_SERVICE_URL: ${ASSESSMENT_SERVICE_URL:-http://assessment-service:8000}
+      ACADEMIC_SERVICE_URL: ${ACADEMIC_SERVICE_URL:-http://sms-service:8000}
+    ports:
+      - "8007:8000"
+    networks:
+      - school-network
+
+networks:
+  school-network:
+    external: true
