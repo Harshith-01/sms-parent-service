@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
+from core.db_errors import db_integrity_http_exception
 
 from core.database import get_db
 from core.dependencies import require_role
@@ -93,9 +94,9 @@ def create_parent(
         db.commit()
         logger.info(f"Parent created: {parent_id} by {user.get('user_id')}")
         return {"parent_id": parent_id}
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(409, "Duplicate or invalid parent data")
+        raise db_integrity_http_exception(exc, fallback_status=409, fallback_detail="Duplicate or invalid parent data")
     except HTTPException:
         db.rollback()
         raise
@@ -261,9 +262,9 @@ def link_student(
         db.add(rel)
         db.commit()
         return {"message": "Student linked to parent"}
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(409, "This student is already linked to this parent")
+        raise db_integrity_http_exception(exc, fallback_status=409, fallback_detail="This student is already linked to this parent")
 
 
 @router.delete("/{parent_id}/unlink-student/{student_id}")
@@ -332,9 +333,9 @@ def update_parent(
     try:
         db.commit()
         return {"message": "Parent updated"}
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(409, "Update constraint violation")
+        raise db_integrity_http_exception(exc, fallback_status=409, fallback_detail="Update constraint violation")
 
 
 # ============================================================
